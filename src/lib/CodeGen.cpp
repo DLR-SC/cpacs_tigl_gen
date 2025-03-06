@@ -266,6 +266,9 @@ namespace tigl {
                     hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Count() const;";
                     hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index) const;";
                     hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index);";
+                    hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const;";
+                    hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID);";
+                    hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const;";
                 } // generate special accessors for uid reference vectors
                 else if (f.cardinality() == Cardinality::Vector && f.xmlTypeName == c_uidRefType) {
                     hpp << "TIGL_EXPORT virtual void AddTo" << capitalizeFirstLetter(f.name()) << "(const " << vectorInnerType(f) << "& value);";
