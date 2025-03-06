@@ -264,11 +264,13 @@ namespace tigl {
                     hpp << "TIGL_EXPORT virtual " << getterSetterType(f) << "& Get" << capitalizeFirstLetter(f.name()) << "();";
                     hpp << EmptyLine;
                     hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Count() const;";
+                    hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const;";
+                    hpp << EmptyLine;
                     hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index) const;";
                     hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index);";
+                    hpp << EmptyLine;
                     hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const;";
                     hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID);";
-                    hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const;";
                 } // generate special accessors for uid reference vectors
                 else if (f.cardinality() == Cardinality::Vector && f.xmlTypeName == c_uidRefType) {
                     hpp << "TIGL_EXPORT virtual void AddTo" << capitalizeFirstLetter(f.name()) << "(const " << vectorInnerType(f) << "& value);";
@@ -389,6 +391,27 @@ namespace tigl {
                     cpp << "}";
                     cpp << EmptyLine;
 
+                    // Getter for index by UID
+                    cpp << "size_t " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const";
+                    cpp << "{";
+                    {
+                        Scope s(cpp);
+                        cpp << "for (size_t i=0; i < Get" << capitalizeFirstLetter(f.cpacsName) << "Count(); i++) {";
+                        {
+                            Scope s(cpp);
+                            cpp << "const std::string tmpUID(" << f.fieldName() << "[i]->GetUID());";
+                            cpp << "if (tmpUID == UID) {";
+                            {
+                                   Scope s(cpp);
+                                   cpp << "return i+1;";
+                            }
+                            cpp << "}";
+                        }
+                        cpp << "}";
+                    }
+                    cpp << "}";
+                    cpp << EmptyLine;
+
                     //Getters for elements in vector type by index;
                     for (auto isConst : { false, true }) {
                         if(isConst){
@@ -399,13 +422,13 @@ namespace tigl {
                         cpp << "{";
                         {
                             Scope s(cpp);
-                            cpp << "index--;";
-                            cpp << "if (index < 0 || index >= Get" << capitalizeFirstLetter(f.cpacsName) << "Count()) {";
+                            cpp << "if (index < 1 || index > Get" << capitalizeFirstLetter(f.cpacsName) << "Count()) {";
                             {
                                 Scope s(cpp);
                                 cpp << "throw CTiglError(\"Invalid index in " << getterSetterType(f) << "::Get" << capitalizeFirstLetter(f.cpacsName) << "\", TIGL_INDEX_ERROR);";
                             }
                              cpp << "}";
+                             cpp << "index--;";
                              if (vectorInnerTypeIsUniquePtr(f)) {
                                 cpp << "return *" << f.fieldName() << "[index];";
                              } else {
@@ -416,6 +439,36 @@ namespace tigl {
                          cpp << EmptyLine;
                     }
 
+                    //Getters for elements in vector type by uid;
+                    for (auto isConst : { false, true }) {
+                        if(isConst){
+                            cpp << "const " << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const";
+                        } else {
+                            cpp << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID)";
+                        }
+                        cpp << "{";
+                        {
+                            Scope s(cpp);
+                            cpp << "for (auto& elem : " << f.fieldName() <<" ) {";
+                            {
+                                Scope s(cpp);
+                                cpp << "if (elem->GetUID() == UID)";
+                                {
+                                    Scope s(cpp);
+                                    if (vectorInnerTypeIsUniquePtr(f)) {
+                                       cpp << "return *elem;";
+                                    } else {
+                                       cpp << "return elem;";
+                                    }
+
+                                }
+                                cpp << "throw CTiglError(\"Invalid UID in " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << ". \\\"\"+ UID + \"\\\" not found in CPACS file!\" , TIGL_UID_ERROR);";
+                            }
+                            cpp << "}";
+                         }
+                        cpp << "}";
+                        cpp << EmptyLine;
+                     }
 
                 }// generate special accessors for uid reference vectors
                 else if (f.cardinality() == Cardinality::Vector && f.xmlTypeName == c_uidRefType) {
