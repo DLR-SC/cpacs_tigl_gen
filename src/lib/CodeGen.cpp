@@ -32,6 +32,7 @@ namespace tigl {
     }
 
     namespace {
+
         auto customReplacedType(const std::string& type, const Tables& tables) -> const std::string& {
             const auto p = tables.m_customTypes.find(type);
             return p ? *p : type;
@@ -200,7 +201,7 @@ namespace tigl {
                     return typeName;
                 case Cardinality::Vector:
                 {
-                    if (vectorInnerTypeIsUniquePtr(field))
+                    if (vectorInnerTypeIsCPACSClass(field))
                         return "std::vector<std::unique_ptr<" + typeName + ">>";
                     else
                         return "std::vector<" + typeName + ">";
@@ -220,7 +221,20 @@ namespace tigl {
             return customReplacedType(field);
         }
 
-        auto vectorInnerTypeIsUniquePtr(const Field& field) const -> bool {
+        auto vectorInnerClass(const Field& field) const -> Class  const&
+        {
+            if (field.cardinality() != Cardinality::Vector){
+                throw std::logic_error("Requested vector inner type for non-vector type");
+            }
+            auto const it = m_types.classes.find(field.typeName);
+            if(vectorInnerTypeIsCPACSClass(field) && it != std::end(m_types.classes)) {
+                return it->second;
+            } else {
+                throw std::logic_error("VectorInnerType is not a CPACS class");
+            }
+        }
+
+        auto vectorInnerTypeIsCPACSClass(const Field& field) const -> bool {
             if (field.cardinality() != Cardinality::Vector)
                 throw std::logic_error("Requested vector inner type for non-vector type");
             return m_types.classes.find(field.typeName) != std::end(m_types.classes);
@@ -264,14 +278,18 @@ namespace tigl {
                     hpp << "TIGL_EXPORT virtual " << getterSetterType(f) << "& Get" << capitalizeFirstLetter(f.name()) << "();";
                     hpp << EmptyLine;
                     hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Count() const;";
-                    hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const;";
+                    if(vectorInnerTypeIsCPACSClass(f) && hasUidField(vectorInnerClass(f))){
+                        hpp << "TIGL_EXPORT virtual size_t Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const;";
+                    }
                     hpp << EmptyLine;
                     hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index) const;";
                     hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(size_t index);";
-                    hpp << EmptyLine;
-                    hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const;";
-                    hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID);";
-                } // generate special accessors for uid reference vectors
+                    if(vectorInnerTypeIsCPACSClass(f) && hasUidField(vectorInnerClass(f))){
+                        hpp << EmptyLine;
+                        hpp << "TIGL_EXPORT virtual const " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const;";
+                        hpp << "TIGL_EXPORT virtual " << vectorInnerType(f) << "& Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID);";
+                        }
+                    } // generate special accessors for uid reference vectors
                 else if (f.cardinality() == Cardinality::Vector && f.xmlTypeName == c_uidRefType) {
                     hpp << "TIGL_EXPORT virtual void AddTo" << capitalizeFirstLetter(f.name()) << "(const " << vectorInnerType(f) << "& value);";
                     hpp << "TIGL_EXPORT virtual bool RemoveFrom" << capitalizeFirstLetter(f.name()) << "(const " << vectorInnerType(f) << "& value);";
@@ -392,25 +410,38 @@ namespace tigl {
                     cpp << EmptyLine;
 
                     // Getter for index by UID
-                    cpp << "size_t " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const";
-                    cpp << "{";
-                    {
-                        Scope s(cpp);
-                        cpp << "for (size_t i=0; i < Get" << capitalizeFirstLetter(f.cpacsName) << "Count(); i++) {";
+                    if(vectorInnerTypeIsCPACSClass(f) && hasUidField(vectorInnerClass(f))){
+                        cpp << "size_t " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "Index(const std::string& UID) const";
+                        cpp << "{";
                         {
                             Scope s(cpp);
-                            cpp << "const std::string tmpUID(" << f.fieldName() << "[i]->GetUID());";
-                            cpp << "if (tmpUID == UID) {";
+                            cpp << "for (size_t i=0; i < Get" << capitalizeFirstLetter(f.cpacsName) << "Count(); i++) {";
                             {
-                                   Scope s(cpp);
-                                   cpp << "return i+1;";
+                                Scope s(cpp);
+                                if(vectorInnerTypeIsCPACSClass(f) && hasUidField(vectorInnerClass(f)) && !hasMandatoryUidField(vectorInnerClass(f))) {
+                                    cpp << "const boost::optional<std::string> tmpUID(*" << f.fieldName() << "[i]->GetUID());";
+                                    cpp << "if (tmpUID == UID) {";
+                                    {
+                                           Scope s(cpp);
+                                           cpp << "return i+1;";
+                                    }
+                                    cpp << "}";
+                                } else {
+                                    cpp << "const std::string tmpUID(" << f.fieldName() << "[i]->GetUID());";
+                                    cpp << "if (tmpUID == UID) {";
+                                    {
+                                           Scope s(cpp);
+                                           cpp << "return i+1;";
+                                    }
+                                    cpp << "}";
+                                }
                             }
                             cpp << "}";
+                            cpp << "throw CTiglError(\"Invalid UID in " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "Index\", TIGL_UID_ERROR);";
                         }
                         cpp << "}";
+                        cpp << EmptyLine;
                     }
-                    cpp << "}";
-                    cpp << EmptyLine;
 
                     //Getters for elements in vector type by index;
                     for (auto isConst : { false, true }) {
@@ -429,7 +460,8 @@ namespace tigl {
                             }
                              cpp << "}";
                              cpp << "index--;";
-                             if (vectorInnerTypeIsUniquePtr(f)) {
+                             // CPACS classes are stored in smart pointers and we need to derefence
+                             if (vectorInnerTypeIsCPACSClass(f)) {
                                 cpp << "return *" << f.fieldName() << "[index];";
                              } else {
                                 cpp << "return " << f.fieldName() << "[index];";
@@ -440,35 +472,37 @@ namespace tigl {
                     }
 
                     //Getters for elements in vector type by uid;
-                    for (auto isConst : { false, true }) {
-                        if(isConst){
-                            cpp << "const " << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const";
-                        } else {
-                            cpp << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID)";
-                        }
-                        cpp << "{";
-                        {
-                            Scope s(cpp);
-                            cpp << "for (auto& elem : " << f.fieldName() <<" ) {";
+                    if(vectorInnerTypeIsCPACSClass(f) && hasUidField(vectorInnerClass(f))){
+                        for (auto isConst : { false, true }) {
+                            if(isConst){
+                                cpp << "const " << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID) const";
+                            } else {
+                                cpp << vectorInnerType(f) << "& " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << "(const std::string& UID)";
+                            }
+                            cpp << "{";
                             {
                                 Scope s(cpp);
-                                cpp << "if (elem->GetUID() == UID)";
+                                cpp << "for (auto& elem : " << f.fieldName() <<" ) {";
                                 {
                                     Scope s(cpp);
-                                    if (vectorInnerTypeIsUniquePtr(f)) {
-                                       cpp << "return *elem;";
-                                    } else {
-                                       cpp << "return elem;";
-                                    }
+                                    cpp << "if (elem->GetUID() == UID)";
+                                    {
+                                        Scope s(cpp);
+                                        if (vectorInnerTypeIsCPACSClass(f)) {
+                                           cpp << "return *elem;";
+                                        } else {
+                                           cpp << "return elem;";
+                                        }
 
+                                    }
+                                    cpp << "}";
+                                    cpp << "throw CTiglError(\"Invalid UID in " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << ". \\\"\"+ UID + \"\\\" not found in CPACS file!\" , TIGL_UID_ERROR);";
                                 }
-                                cpp << "throw CTiglError(\"Invalid UID in " << className << "::Get" << capitalizeFirstLetter(f.cpacsName) << ". \\\"\"+ UID + \"\\\" not found in CPACS file!\" , TIGL_UID_ERROR);";
-                            }
+                             }
                             cpp << "}";
-                         }
-                        cpp << "}";
-                        cpp << EmptyLine;
-                     }
+                            cpp << EmptyLine;
+                        }
+                    }
 
                 }// generate special accessors for uid reference vectors
                 else if (f.cardinality() == Cardinality::Vector && f.xmlTypeName == c_uidRefType) {
