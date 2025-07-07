@@ -59,6 +59,7 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetEs();
 
         TIGL_EXPORT virtual size_t GetECount() const;
+
         TIGL_EXPORT virtual const int& GetE(size_t index) const;
         TIGL_EXPORT virtual int& GetE(size_t index);
 
@@ -69,6 +70,7 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetGs();
 
         TIGL_EXPORT virtual size_t GetGCount() const;
+
         TIGL_EXPORT virtual const int& GetG(size_t index) const;
         TIGL_EXPORT virtual int& GetG(size_t index);
 
@@ -79,6 +81,7 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetIs();
 
         TIGL_EXPORT virtual size_t GetICount() const;
+
         TIGL_EXPORT virtual const int& GetI(size_t index) const;
         TIGL_EXPORT virtual int& GetI(size_t index);
 
@@ -325,19 +328,19 @@ namespace generated
 
     int& CPACSRoot::GetE(size_t index)
     {
-        index--;
-        if (index < 0 || index >= GetECount()) {
+        if (index < 1 || index > GetECount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetE", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_es[index];
     }
 
     const int& CPACSRoot::GetE(size_t index) const
     {
-        index--;
-        if (index < 0 || index >= GetECount()) {
+        if (index < 1 || index > GetECount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetE", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_es[index];
     }
 
@@ -369,19 +372,19 @@ namespace generated
 
     int& CPACSRoot::GetG(size_t index)
     {
-        index--;
-        if (index < 0 || index >= GetGCount()) {
+        if (index < 1 || index > GetGCount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetG", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_gs[index];
     }
 
     const int& CPACSRoot::GetG(size_t index) const
     {
-        index--;
-        if (index < 0 || index >= GetGCount()) {
+        if (index < 1 || index > GetGCount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetG", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_gs[index];
     }
 
@@ -413,19 +416,19 @@ namespace generated
 
     int& CPACSRoot::GetI(size_t index)
     {
-        index--;
-        if (index < 0 || index >= GetICount()) {
+        if (index < 1 || index > GetICount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetI", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_is[index];
     }
 
     const int& CPACSRoot::GetI(size_t index) const
     {
-        index--;
-        if (index < 0 || index >= GetICount()) {
+        if (index < 1 || index > GetICount()) {
             throw CTiglError("Invalid index in std::vector<int>::GetI", TIGL_INDEX_ERROR);
         }
+        index--;
         return m_is[index];
     }
 
