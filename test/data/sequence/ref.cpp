@@ -59,13 +59,9 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetEs();
 
         TIGL_EXPORT virtual size_t GetECount() const;
-        TIGL_EXPORT virtual size_t GetEIndex(const std::string& UID) const;
 
         TIGL_EXPORT virtual const int& GetE(size_t index) const;
         TIGL_EXPORT virtual int& GetE(size_t index);
-
-        TIGL_EXPORT virtual const int& GetE(const std::string& UID) const;
-        TIGL_EXPORT virtual int& GetE(const std::string& UID);
 
         TIGL_EXPORT virtual const boost::optional<int>& GetF() const;
         TIGL_EXPORT virtual void SetF(const boost::optional<int>& value);
@@ -74,13 +70,9 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetGs();
 
         TIGL_EXPORT virtual size_t GetGCount() const;
-        TIGL_EXPORT virtual size_t GetGIndex(const std::string& UID) const;
 
         TIGL_EXPORT virtual const int& GetG(size_t index) const;
         TIGL_EXPORT virtual int& GetG(size_t index);
-
-        TIGL_EXPORT virtual const int& GetG(const std::string& UID) const;
-        TIGL_EXPORT virtual int& GetG(const std::string& UID);
 
         TIGL_EXPORT virtual const int& GetH() const;
         TIGL_EXPORT virtual void SetH(const int& value);
@@ -89,13 +81,9 @@ namespace generated
         TIGL_EXPORT virtual std::vector<int>& GetIs();
 
         TIGL_EXPORT virtual size_t GetICount() const;
-        TIGL_EXPORT virtual size_t GetIIndex(const std::string& UID) const;
 
         TIGL_EXPORT virtual const int& GetI(size_t index) const;
         TIGL_EXPORT virtual int& GetI(size_t index);
-
-        TIGL_EXPORT virtual const int& GetI(const std::string& UID) const;
-        TIGL_EXPORT virtual int& GetI(const std::string& UID);
 
     protected:
         int                  m_a;
@@ -338,16 +326,6 @@ namespace generated
         return m_es.size();
     }
 
-    size_t CPACSRoot::GetEIndex(const std::string& UID) const
-    {
-        for (size_t i=0; i < GetECount(); i++) {
-            const std::string tmpUID(m_es[i]->GetUID());
-            if (tmpUID == UID) {
-                return i+1;
-            }
-        }
-    }
-
     int& CPACSRoot::GetE(size_t index)
     {
         if (index < 1 || index > GetECount()) {
@@ -364,24 +342,6 @@ namespace generated
         }
         index--;
         return m_es[index];
-    }
-
-    int& CPACSRoot::GetE(const std::string& UID)
-    {
-        for (auto& elem : m_es ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetE. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
-    }
-
-    const int& CPACSRoot::GetE(const std::string& UID) const
-    {
-        for (auto& elem : m_es ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetE. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
     }
 
 
@@ -410,16 +370,6 @@ namespace generated
         return m_gs.size();
     }
 
-    size_t CPACSRoot::GetGIndex(const std::string& UID) const
-    {
-        for (size_t i=0; i < GetGCount(); i++) {
-            const std::string tmpUID(m_gs[i]->GetUID());
-            if (tmpUID == UID) {
-                return i+1;
-            }
-        }
-    }
-
     int& CPACSRoot::GetG(size_t index)
     {
         if (index < 1 || index > GetGCount()) {
@@ -436,24 +386,6 @@ namespace generated
         }
         index--;
         return m_gs[index];
-    }
-
-    int& CPACSRoot::GetG(const std::string& UID)
-    {
-        for (auto& elem : m_gs ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetG. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
-    }
-
-    const int& CPACSRoot::GetG(const std::string& UID) const
-    {
-        for (auto& elem : m_gs ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetG. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
     }
 
 
@@ -482,16 +414,6 @@ namespace generated
         return m_is.size();
     }
 
-    size_t CPACSRoot::GetIIndex(const std::string& UID) const
-    {
-        for (size_t i=0; i < GetICount(); i++) {
-            const std::string tmpUID(m_is[i]->GetUID());
-            if (tmpUID == UID) {
-                return i+1;
-            }
-        }
-    }
-
     int& CPACSRoot::GetI(size_t index)
     {
         if (index < 1 || index > GetICount()) {
@@ -508,24 +430,6 @@ namespace generated
         }
         index--;
         return m_is[index];
-    }
-
-    int& CPACSRoot::GetI(const std::string& UID)
-    {
-        for (auto& elem : m_is ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetI. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
-    }
-
-    const int& CPACSRoot::GetI(const std::string& UID) const
-    {
-        for (auto& elem : m_is ) {
-            if (elem->GetUID() == UID)
-                return elem;
-            throw CTiglError("Invalid UID in CPACSRoot::GetI. \""+ UID + "\" not found in CPACS file!" , TIGL_UID_ERROR);
-        }
     }
 
 
