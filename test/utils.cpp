@@ -1,7 +1,8 @@
 #include "utils.h"
 #include <fstream>
+#include <gtest/gtest.h>
 
-auto readTextFile(const boost::filesystem::path& path) -> std::string {
+auto readTextFile(const std::filesystem::path& path) -> std::string {
     std::ifstream f(path.string());
     if (!f)
         throw std::ios::failure("Failed to open file " + path.string() + " for reading");
@@ -17,9 +18,9 @@ auto readTextFile(const boost::filesystem::path& path) -> std::string {
 }
 
 auto testName() -> std::string {
-    return boost::unit_test::framework::current_test_case().p_name.get();
+    return ::testing::UnitTest::GetInstance()->current_test_info()->name();
 }
 
-auto testDir() -> boost::filesystem::path {
-    return boost::filesystem::path{ c_dataDir } / testName();
+auto testDir() -> std::filesystem::path {
+    return std::filesystem::path{ c_dataDir } / testName();
 }

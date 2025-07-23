@@ -1,5 +1,5 @@
-#define BOOST_TEST_MODULE CPACSGenTests
-#include <boost/test/unit_test.hpp>
+#define TEST_MODULE CPACSGenTests
+#include <gtest/gtest.h>
 
 #include "../src/lib/SchemaParser.h"
 #include "../src/lib/TypeSystem.h"
@@ -8,6 +8,9 @@
 #include "../src/lib/Filesystem.h"
 
 #include "utils.h"
+#include <fstream>
+#include <iostream>
+#include <filesystem>
 
 void runTest() {
     const auto testDir = ::testDir();
@@ -27,60 +30,61 @@ void runTest() {
 
     const auto ref = readTextFile(refFile);
     const auto result = readTextFile(resultFile);
+
     if (ref != result)
-        BOOST_TEST_ERROR("ref and result mismatch. please diff files in filesystem");
+        ADD_FAILURE() << "ref and result mismatch. please diff files in filesystem";
     else
-        boost::filesystem::remove(resultFile);
+        std::filesystem::remove(resultFile);
 }
 
-BOOST_AUTO_TEST_CASE(sequence) {
+TEST(CPACSGenTests, sequence) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(all) {
+TEST(CPACSGenTests, all) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(choice) {
+TEST(CPACSGenTests, choice) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(documentation) {
+TEST(CPACSGenTests, documentation) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(uidinbasetype) {
+TEST(CPACSGenTests, uidinbasetype) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(custombasetype) {
+TEST(CPACSGenTests, custombasetype) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(basetypewithparent) {
+TEST(CPACSGenTests, basetypewithparent) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(uidreferencevector) {
+TEST(CPACSGenTests, uidreferencevector) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(cdata) {
+TEST(CPACSGenTests, cdata) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(simplebasetypewithparent) {
+TEST(CPACSGenTests, simplebasetypewithparent) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(complextypewithsimplecontent) {
+TEST(CPACSGenTests, complextypewithsimplecontent) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(collapsedifferentenums) {
+TEST(CPACSGenTests, collapsedifferentenums) {
     runTest();
 }
 
-BOOST_AUTO_TEST_CASE(optionalchoice) {
+TEST(CPACSGenTests, optionalchoice) {
     runTest();
 }

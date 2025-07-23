@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <iostream>
 #include <iomanip>
 
@@ -9,7 +9,7 @@
 #include "../lib/Filesystem.h"
 #include "../lib/NotImplementedException.h"
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace tigl {
     const auto runtimeFiles = {

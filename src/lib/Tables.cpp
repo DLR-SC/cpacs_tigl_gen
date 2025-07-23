@@ -75,15 +75,15 @@ namespace tigl {
     }
 
     bool MappingTable::contains(const std::string& key) const {
-        return find(key).is_initialized();
+        return find(key);
     }
 
-    boost::optional<const std::string&> MappingTable::find(const std::string& key) const {
+    const std::string* MappingTable::find(const std::string& key) const {
         const auto it = m_map.find(key);
         if (it != std::end(m_map))
-            return it->second;
+            return &(it->second);
         else
-            return {};
+            return nullptr;
     }
 
     void MappingTable::substituteIfExists(const std::string& key, std::string& value) const {

@@ -3,13 +3,12 @@
 
 cmake_minimum_required(VERSION 3.2)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(CPACSGen)
 
 # cache variables
-set(BOOST_ROOT "" CACHE PATH "Boost installation prefix")
 set(TIXI_PATH  "" CACHE PATH "Tixi installation prefix")
 set(TIGL_PATH  "" CACHE PATH "Tigl installation prefix")
 
@@ -21,12 +20,6 @@ if (SYSTEM_RHEL7)
         add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
     endif()
 endif()
-
-# find boost
-set(Boost_USE_STATIC_LIBS ON CACHE BOOL "Find static or dynamic libs. Static libs require lib prefix.")
-find_package (Boost REQUIRED COMPONENTS system filesystem date_time regex unit_test_framework)
-mark_as_advanced(CLEAR BOOST_ROOT) # find module for boost marks these variables as advanced
-mark_as_advanced(CLEAR Boost_USE_STATIC_LIBS)
 
 # find tixi
 set(CMAKE_PREFIX_PATH "${TIXI_PATH};${CMAKE_PREFIX_PATH}")
@@ -42,9 +35,6 @@ target_compile_definitions(lib${PROJECT_NAME} PUBLIC
 	-DCPACS_GEN
 )
 
-target_include_directories(lib${PROJECT_NAME} PUBLIC
-	${Boost_INCLUDE_DIRS}
-)
 
 # driver
 file(GLOB DRIVER_INPUTS src/driver/*.cpp *src/driver/*.h *.md)
@@ -53,32 +43,30 @@ source_group(" " FILES ${DRIVER_INPUTS})
 
 target_link_libraries(${PROJECT_NAME}
 	lib${PROJECT_NAME}
-	${Boost_LIBRARIES}
 )
 
 # tests
+message(STATUS "Build gtest Testsuite")
+
+enable_testing()
+option(gtest_force_shared_crt "" ON)
+mark_as_advanced(gtest_force_shared_crt gtest_build_tests gtest_build_samples gtest_disable_pthreads)
+
+set(BUILD_GMOCK OFF)
+set(INSTALL_GTEST OFF)
+add_subdirectory(thirdparty/googletest)
+
 set(DATA_DIR ${CMAKE_SOURCE_DIR}/test/data)
 configure_file(test/paths.h.in ${CMAKE_BINARY_DIR}/test/paths.h)
 
 file(GLOB TEST_INPUTS test/*.cpp test/*.h)
 list(APPEND TEST_INPUTS ${CMAKE_BINARY_DIR}/test/paths.h)
 add_executable(tests ${TEST_INPUTS})
-source_group(" " FILES ${TEST_INPUTS})
-
-if(NOT Boost_USE_STATIC_LIBS)
-	target_compile_definitions(tests PUBLIC
-		-DBOOST_TEST_DYN_LINK
-	)
-endif()
-
+target_link_libraries(tests PRIVATE gtest gtest_main libCPACSGen)
 target_include_directories(tests PUBLIC
 	${CMAKE_BINARY_DIR}/test
 )
-
-target_link_libraries(tests
-	lib${PROJECT_NAME}
-	${Boost_LIBRARIES}
-)
+add_test(NAME tests COMMAND tests)
 
 # generate target
 if(TIGL_PATH)

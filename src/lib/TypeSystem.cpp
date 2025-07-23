@@ -1,11 +1,14 @@
 #include "TypeSystem.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/range/adaptors.hpp>
 
 #include <iostream>
 #include <cctype>
 #include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+#include <set>
 
 #include "NotImplementedException.h"
 #include "Tables.h"
@@ -76,9 +79,9 @@ namespace tigl {
                 }
 
                 // elements
-                struct ContentVisitor : public boost::static_visitor<> {
+                struct ContentVisitor {
                     ContentVisitor(const xsd::SchemaTypes& types, std::vector<Field>& members, ChoiceElements& choiceItems, std::size_t attributeCount, const Tables& tables, std::vector<std::size_t> choiceIndices = {})
-                        : types(types), members(members), choiceItems(choiceItems), attributeCount(attributeCount), tables(tables), choiceIndices(choiceIndices) {}
+                        : types(types), members(members), choiceItems(choiceItems), attributeCount(attributeCount), tables(tables), choiceIndices(std::move(choiceIndices)) {}
 
                     void emitField(Field f) const {
                         if (!choiceIndices.empty()) {
@@ -87,7 +90,14 @@ namespace tigl {
                             f.minOccurs = 0;
 
                             // give custom name
-                            f.namePostfix = "_choice" + boost::join(choiceIndices | boost::adaptors::transformed([](std::size_t i) { return std::to_string(i); }), "_");
+                            std::ostringstream oss;
+                            oss << "_choice";
+                            for (std::size_t i = 0; i < choiceIndices.size(); ++i) {
+                                oss << choiceIndices[i];
+                                if (i + 1 < choiceIndices.size())
+                                    oss << "_";
+                            }
+                            f.namePostfix = oss.str();
 
                             choiceItems.push_back(ChoiceElement{ members.size(), minBefore == 0 });
                         }
@@ -118,15 +128,14 @@ namespace tigl {
 
                         Choice choice;
                         choice.minOccurs = c.minOccurs;
-                        for (const auto& v : c.elements | boost::adaptors::indexed(1)) {
-                            // collect members of one choice
+                        for (std::size_t idx = 0; idx < c.elements.size(); ++idx) {
                             auto indices = choiceIndices;
-                            indices.push_back(v.index());
+                            indices.push_back(idx + 1); // Index starting at 1
                             ChoiceElements subChoiceItems;
-                            v.value().visit(ContentVisitor(types, members, subChoiceItems, attributeCount, tables, indices));
+                            c.elements[idx].visit(ContentVisitor(types, members, subChoiceItems, attributeCount, tables, indices));
                             choice.options.push_back(std::move(subChoiceItems));
                         }
-                        choiceItems.push_back(std::move(choice));
+                        choiceItems.push_back(std::make_shared<Choice>(std::move(choice)));
 
                         // consistency check, two types with the same name but different types or cardinality are problematic
                         for (std::size_t i = countBefore; i < members.size(); i++) {

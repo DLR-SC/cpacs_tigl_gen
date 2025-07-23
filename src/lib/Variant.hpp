@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <variant>
+#include <optional>
 
 namespace tigl {
     template <typename... Ts>
@@ -42,7 +42,7 @@ namespace tigl {
         void visit(Visitor func) {
             if (m_data) {
                 VisitorWrapper<Visitor> visitor(func);
-                m_data->apply_visitor(visitor);
+                std::visit(visitor, *m_data);
             }
         }
 
@@ -50,33 +50,33 @@ namespace tigl {
         void visit(Visitor func) const {
             if (m_data) {
                 VisitorWrapper<Visitor> visitor(func);
-                m_data->apply_visitor(visitor);
+                std::visit(visitor, *m_data);
             }
         }
 
         template<typename T>
         bool is() const {
             if (m_data)
-                return m_data->type() == typeid(T);
+                return std::holds_alternative<T>(*m_data);
             return false;
         }
 
         template<typename T>
         T& as() {
-            return boost::get<T&>(*m_data);
+            return std::get<T>(*m_data);
         }
 
         template<typename T>
         const T& as() const {
-            return boost::get<const T&>(*m_data);
+            return std::get<T>(*m_data);
         }
 
     private:
         // adapts a visitor for boost
         template <typename Func>
-        struct VisitorWrapper : public boost::static_visitor<> {
-            VisitorWrapper(Func func)
-                : m_func(func) {}
+        struct VisitorWrapper {
+            explicit VisitorWrapper(Func func)
+                : m_func(std::move(func)) {}
 
             template<typename T>
             void operator()(T&& arg) {
@@ -87,6 +87,6 @@ namespace tigl {
             Func m_func;
         };
 
-        boost::optional<boost::variant<Ts...>> m_data;
+        std::optional<std::variant<Ts...>> m_data;
     };
 }

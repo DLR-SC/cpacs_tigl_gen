@@ -1,13 +1,14 @@
 #pragma once
 
-#include <boost/variant/recursive_wrapper.hpp>
-
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 #include <stdexcept>
+#include <variant>
+#include <memory>
+#include <cassert>
 
 #include "Variant.hpp"
 #include "SchemaParser.h"
@@ -100,7 +101,7 @@ namespace tigl {
     };
 
     struct Choice;
-    using ChoiceElements = std::vector<boost::variant<ChoiceElement, boost::recursive_wrapper<Choice>>>;
+    using ChoiceElements = std::vector<std::variant<ChoiceElement, std::shared_ptr<Choice>>>;
 
     struct Choice {
         unsigned int minOccurs;

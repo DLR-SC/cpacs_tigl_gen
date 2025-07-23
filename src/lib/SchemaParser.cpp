@@ -1,5 +1,5 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
+#include <cassert>
+#include <regex>
 
 #include <iostream>
 
@@ -256,9 +256,11 @@ namespace tigl {
                         const auto childXPath = (name == "#text") ? xpath + "/text()[" + std::to_string(++childIndex[name]) + "]"
                                                                   : xpath;
                         auto text = document.textElement(childXPath);
-                        static boost::regex r("^\\s*");
-                        text = boost::regex_replace(text, r, ""); // clear leading whitespace on each line
-                        boost::trim_right(text); // clear trailing whitespace after last line
+                        static std::regex r("^\\s*");
+                        text = std::regex_replace(text, r, ""); // clear leading whitespace on each line
+                        // clear trailing whitespace after last line
+                        text.erase(std::find_if_not(text.rbegin(), text.rend(), [](unsigned char ch) { return std::isspace(ch); }).base(),
+                            text.end());
                         if (!result.empty() && result.back() != '\n')
                             result += ' ';
                         result += text;
