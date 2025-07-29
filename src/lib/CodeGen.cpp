@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <string>
 #include <filesystem>
+#include <functional>
 
 #include "SchemaParser.h"
 #include "Tables.h"
