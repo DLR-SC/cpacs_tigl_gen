@@ -1,7 +1,7 @@
 # CPACSGen cmake project
 # author: Bernhard Manfred Gruber
 
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.11.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -54,7 +54,10 @@ mark_as_advanced(gtest_force_shared_crt gtest_build_tests gtest_build_samples gt
 
 set(BUILD_GMOCK OFF)
 set(INSTALL_GTEST OFF)
-add_subdirectory(thirdparty/googletest)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+message(STATUS "Download and configure the TIGL gtest Testsuite")
+include(AddGoogleTest)
+message(STATUS "Download and configure the TIGL gtest Testsuite - Success")
 
 set(DATA_DIR ${CMAKE_SOURCE_DIR}/test/data)
 configure_file(test/paths.h.in ${CMAKE_BINARY_DIR}/test/paths.h)
