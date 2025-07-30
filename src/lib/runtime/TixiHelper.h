@@ -19,10 +19,6 @@
 
 #include <tixicpp.h>
 
-#ifndef DATE_TIME_NO_LIB
-    #define DATE_TIME_NO_LIB
-#endif
-
 #include <chrono>
 
 #include <ctime>

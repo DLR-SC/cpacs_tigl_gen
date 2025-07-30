@@ -1,4 +1,3 @@
-#define TEST_MODULE CPACSGenTests
 #include <gtest/gtest.h>
 
 #include "../src/lib/SchemaParser.h"
