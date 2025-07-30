@@ -41,7 +41,8 @@ For each subdirectory, CPACSGen runs an additional pass, putting the generated f
 1. Clone the CPACSGen repository from Github
 2. Clone the TiGL repository Github
 3. Use CMake to configure CPACSGen
-    1. Set TIGL_PATH to the directory of your TiGL clone
+    1. Set TIXI_PATH, if the TiXI package is not already installed in the current conda environment
+    2. Set TIGL_PATH to the directory of your TiGL clone
 4. Build CPACSGen
 5. Build target generate  
    executes CPACSGen.exe $\{TIGL_DIR}/cpacs_gen_input $\{CPACSGEN_DIR}/src $\{TIGL_DIR}/src/generated
