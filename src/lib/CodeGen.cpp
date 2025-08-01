@@ -1337,8 +1337,8 @@ namespace tigl {
                                         unique(allIndices);
                                         unique(childIndices);
 
-                                        auto it = std::remove_if(allIndices.begin(), allIndices.end(), [&](std::size_t ai) {
-                                            for (std::size_t ci : childIndices) {
+                                        const auto it = std::remove_if(std::begin(allIndices), std::end(allIndices), [&](std::size_t ai) {
+                                            for (const auto ci : childIndices) {
                                                 if (ci == ai)
                                                     return true;
                                                 // additionally exclude elements with the same name in cpacs (choices with the same element in both alternatives)
@@ -1347,7 +1347,7 @@ namespace tigl {
                                             }
                                             return false;
                                         });
-                                        allIndices.erase(it, allIndices.end());
+                                        allIndices.erase(it, std::end(allIndices));
 
                                         for (const auto& i : allIndices) {
                                             writeIsFieldThere(cpp, c.fields[i]);
