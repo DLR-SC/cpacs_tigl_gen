@@ -81,7 +81,7 @@ namespace tigl {
                 // elements
                 struct ContentVisitor {
                     ContentVisitor(const xsd::SchemaTypes& types, std::vector<Field>& members, ChoiceElements& choiceItems, std::size_t attributeCount, const Tables& tables, std::vector<std::size_t> choiceIndices = {})
-                        : types(types), members(members), choiceItems(choiceItems), attributeCount(attributeCount), tables(tables), choiceIndices(choiceIndices) {}
+                        : types(types), members(members), choiceItems(choiceItems), attributeCount(attributeCount), tables(tables), choiceIndices(std::move(choiceIndices)) {}
 
                     void emitField(Field f) const {
                         if (!choiceIndices.empty()) {
