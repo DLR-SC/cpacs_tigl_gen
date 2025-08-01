@@ -1198,6 +1198,12 @@ namespace tigl {
                 throw std::logic_error("elements inside choice can only be optional or vector");
         }
 
+        static auto unique (std::vector<std::size_t>& v) {
+            std::sort(std::begin(v), std::end(v));
+            const auto it = std::unique(std::begin(v), std::end(v));
+            v.erase(it, std::end(v));
+        }
+
         void writeChoiceValidatorImplementation(IndentingStreamWrapper& cpp, const Class& c) const {
             if (!c.choices.empty()) {
                 cpp << "bool " << c.name << "::ValidateChoices() const";
@@ -1267,10 +1273,6 @@ namespace tigl {
                                         parentCollector(ch);
                                         auto& allIndices = parentCollector.indices;
 
-                                        auto unique = [](std::vector<std::size_t>& v) {
-                                            std::sort(v.begin(), v.end());
-                                            v.erase(std::unique(v.begin(), v.end()), v.end());
-                                        };
                                         unique(allIndices);
 
                                         for (const auto& i : allIndices) {
@@ -1332,10 +1334,6 @@ namespace tigl {
                                         childCollector(ces);
                                         auto& childIndices = childCollector.indices;
 
-                                        auto unique = [](std::vector<std::size_t>& v) {
-                                            std::sort(v.begin(), v.end());
-                                            v.erase(std::unique(v.begin(), v.end()), v.end());
-                                        };
                                         unique(allIndices);
                                         unique(childIndices);
 
