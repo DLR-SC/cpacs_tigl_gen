@@ -13,7 +13,7 @@ https://github.com/RISCSoftware/cpacs_tigl_gen
 The following components are required to build and run CPACSGen
 * A working copy of CPACSGen
 * CMake
-* C\++11/C++14 compliant compiler (VS2017 is currently used and tested)
+* C\++17 compliant compiler (VS2017 is currently used and tested)
 * TIXI library (https://github.com/DLR-SC/tixi)
 * A working copy of TiGL with CPACSGen input files (https://github.com/DLR-SC/tigl)
 
