@@ -35,8 +35,7 @@ namespace tigl {
     namespace {
 
         auto customReplacedType(const std::string& type, const Tables& tables) -> const std::string& {
-            const auto p = tables.m_customTypes.find(type);
-            return p ? *p : type;
+            return tables.m_customTypes.find(type).value_or(type);
         }
 
         auto capitalizeFirstLetter(std::string str) -> std::string {
@@ -1637,11 +1636,11 @@ namespace tigl {
                         switch (f.cardinality()) {
                             case Cardinality::Optional:
                             case Cardinality::Mandatory:
-                                deps.hppIncludes.push_back("<" + *p + ".h>");
+                                deps.hppIncludes.push_back("<" + p->get() + ".h>");
                                 break;
                             case Cardinality::Vector:
                                 deps.hppCustomForwards.push_back(*p);
-                                deps.cppIncludes.push_back("<" + *p + ".h>");
+                                deps.cppIncludes.push_back("<" + p->get() + ".h>");
                                 break;
                         }
                     }
@@ -1654,8 +1653,8 @@ namespace tigl {
                 for (const auto& dep : c.deps.parents) {
                     const auto p = m_tables.m_customTypes.find(dep->name);
                     if (p) {
-                        deps.hppCustomForwards.push_back(*p);
-                        deps.cppIncludes.push_back("\"" + *p + ".h\"");
+                        deps.hppCustomForwards.push_back(p->get());
+                        deps.cppIncludes.push_back("\"" + p->get() + ".h\"");
                     } else {
                         deps.hppForwards.push_back(dep->name);
                         deps.cppIncludes.push_back("\"" + dep->name + ".h\"");
@@ -1740,7 +1739,7 @@ namespace tigl {
         auto parentPointerThis(const Class& c) const -> std::string {
             const auto cust = m_tables.m_customTypes.find(c.name);
             if (cust)
-                return "reinterpret_cast<" + *cust + "*>(this)";
+                return "reinterpret_cast<" + cust->get() + "*>(this)";
             else
                 return "this";
         }
@@ -2011,7 +2010,7 @@ namespace tigl {
                 std::vector<std::string> exportedTypes;
                 const auto& customName = m_tables.m_customTypes.find(c.name);
                 if (customName) {
-                    hpp << "// " << c.name << " is customized, use type " << *customName << " directly";
+                    hpp << "// " << c.name << " is customized, use type " << customName->get() << " directly";
                     if (includes.hppForwards.size() > 0)
                         hpp << EmptyLine;
                 } else
@@ -2251,7 +2250,7 @@ namespace tigl {
 
                 const auto& customName = m_tables.m_customTypes.find(e.name);
                 if (customName) {
-                    hpp << "// " << e.name << " is customized, use type " << *customName << " directly";
+                    hpp << "// " << e.name << " is customized, use type " << customName->get() << " directly";
                 } else {
                     hpp << "// Aliases in tigl namespace";
 
