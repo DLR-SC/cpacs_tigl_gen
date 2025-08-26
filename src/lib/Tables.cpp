@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <functional>
 
 #include "Tables.h"
 
@@ -75,15 +76,15 @@ namespace tigl {
     }
 
     bool MappingTable::contains(const std::string& key) const {
-        return find(key).is_initialized();
+        return find(key).has_value();
     }
 
-    boost::optional<const std::string&> MappingTable::find(const std::string& key) const {
+    std::optional<std::reference_wrapper<const std::string>> MappingTable::find(const std::string& key) const {
         const auto it = m_map.find(key);
         if (it != std::end(m_map))
             return it->second;
         else
-            return {};
+            return std::nullopt;
     }
 
     void MappingTable::substituteIfExists(const std::string& key, std::string& value) const {

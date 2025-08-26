@@ -34,6 +34,7 @@ namespace generated
     /// This XML-Schema document ( XSD ) serves two purposes: (1) it defines the CPACS data structure used in the XML file (e.g., aircraft.xml) and
     /// (2) it provides the corresponding documentation (see picture below). An XML processor (e.g., TiXI https://github.com/DLR-SC/tixi or
     /// XML tools in Eclipse) parses the XSD and XML files and validates whether the data set defined by the user (or tool) conforms to the given structure defined by the schema.
+    /// @see basicPrinciple
     /// This documentation explains the elements defined in CPACS and its corresponding data types .
     /// Data types can either be simple types (string, double, boolean, etc.) or complex types (definition of attributes and sub-elements to build a hierarchical
     /// structure). In addition, the sequence of the elements and their occurrence is documented.

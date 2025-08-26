@@ -1,5 +1,3 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/utility/in_place_factory.hpp>
 
 #include <utility>
 #include <set>
@@ -8,6 +6,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <string>
+#include <filesystem>
+#include <functional>
 
 #include "SchemaParser.h"
 #include "Tables.h"
@@ -34,8 +35,7 @@ namespace tigl {
     namespace {
 
         auto customReplacedType(const std::string& type, const Tables& tables) -> const std::string& {
-            const auto p = tables.m_customTypes.find(type);
-            return p ? *p : type;
+            return tables.m_customTypes.find(type).value_or(type);
         }
 
         auto capitalizeFirstLetter(std::string str) -> std::string {
@@ -240,10 +240,25 @@ namespace tigl {
             return m_types.classes.find(field.typeName) != std::end(m_types.classes);
         }
 
+        std::string trimString(const std::string& s) const{
+            auto start = std::find_if_not(s.begin(), s.end(), [](unsigned char c){ return std::isspace(c); });
+            auto end   = std::find_if_not(s.rbegin(), s.rend(), [](unsigned char c){ return std::isspace(c); }).base();
+
+            return (start < end ? std::string(start, end) : "");
+        }
+
         void writeDocumentation(IndentingStreamWrapper& hpp, const std::string& documentation) const {
             if (!documentation.empty()) {
                 std::vector<std::string> lines;
-                boost::algorithm::split(lines, documentation, boost::is_any_of("\n"));
+                std::istringstream stream(documentation);
+                std::string line;
+
+                while (std::getline(stream, line, '\n')) {
+                    lines.push_back(trimString(line));
+                }
+                if (documentation.back() == '\n') {
+                    lines.push_back("");
+                }
                 for (const auto& line : lines)
                     hpp << "/// " << line;
             }
@@ -796,7 +811,13 @@ namespace tigl {
                 arguments.push_back(parentPointerThis(parentClass));
             if (requiresUidManager(c))
                 arguments.push_back("m_uidMgr");
-            return boost::join(arguments, ", ");
+            std::ostringstream oss;
+            for (size_t i = 0; i < arguments.size(); ++i) {
+                if (i != 0)
+                    oss << ", ";
+                oss << arguments[i];
+            }
+            return oss.str();
         }
 
         void writeReadAttributeOrElementImplementation(IndentingStreamWrapper& cpp, const Class& c, const Field& f) const {
@@ -1177,6 +1198,12 @@ namespace tigl {
                 throw std::logic_error("elements inside choice can only be optional or vector");
         }
 
+        static auto unique (std::vector<std::size_t>& v) {
+            std::sort(std::begin(v), std::end(v));
+            const auto it = std::unique(std::begin(v), std::end(v));
+            v.erase(it, std::end(v));
+        }
+
         void writeChoiceValidatorImplementation(IndentingStreamWrapper& cpp, const Class& c) const {
             if (!c.choices.empty()) {
                 cpp << "bool " << c.name << "::ValidateChoices() const";
@@ -1186,7 +1213,7 @@ namespace tigl {
 
 
 
-                    struct RecursiveColletor : public boost::static_visitor<> {
+                    struct RecursiveColletor {
                         void operator()(const ChoiceElement& ce) {
                             indices.push_back(ce.index);
                         }
@@ -1198,13 +1225,21 @@ namespace tigl {
 
                         void operator()(const ChoiceElements& ces) {
                             for (const auto& ce : ces)
-                                ce.apply_visitor(*this);
+                                std::visit(*this, ce);
+                        }
+
+                        void operator()(const std::shared_ptr<Choice>& c) {
+                            if (c) (*this)(*c);
+                        }
+
+                        void operator()(const std::variant<ChoiceElement, std::shared_ptr<Choice>>& v) {
+                            std::visit(*this, v);
                         }
 
                         std::vector<std::size_t> indices;
                     };
 
-                    struct ChoiceWriter : public boost::static_visitor<> {
+                    struct ChoiceWriter {
                         ChoiceWriter(IndentingStreamWrapper& cpp, const Class& c)
                             : cpp(cpp), c(c) {}
 
@@ -1216,11 +1251,17 @@ namespace tigl {
                                 cpp << "true // " << f.fieldName() << " is optional in choice";
                         }
 
+                        void operator()(const std::shared_ptr<Choice>& chPtr) {
+                            if (chPtr) {
+                                (*this)(*chPtr);
+                            }
+                        }
+
                         void operator()(const Choice& ch) {
                             cpp << "(";
                             {
                                 Scope s(cpp);
-                                boost::optional<Scope> additionalScope;
+                                std::optional<Scope> additionalScope;
 
                                 if (ch.minOccurs == 0) {
                                   cpp << "// all uninitialized is valid since choice is optional!";
@@ -1232,11 +1273,6 @@ namespace tigl {
                                         parentCollector(ch);
                                         auto& allIndices = parentCollector.indices;
 
-                                        auto unique = [](std::vector<std::size_t>& v) {
-                                            std::sort(std::begin(v), std::end(v));
-                                            const auto it = std::unique(std::begin(v), std::end(v));
-                                            v.erase(it, std::end(v));
-                                        };
                                         unique(allIndices);
 
                                         for (const auto& i : allIndices) {
@@ -1266,7 +1302,11 @@ namespace tigl {
                             cpp << ")";
                         }
 
-                        void operator()(const ChoiceElements& ces, boost::optional<const Choice&> parentChoice = {}) {
+                        void operator()(const std::variant<ChoiceElement, std::shared_ptr<Choice>>& variant) {
+                            std::visit(*this, variant);
+                        }
+
+                        void operator()(const ChoiceElements& ces, std::optional<std::reference_wrapper<const Choice>> parentChoice = std::nullopt) {
                             cpp << "(";
                             {
                                 Scope s(cpp);
@@ -1274,7 +1314,7 @@ namespace tigl {
                                 if (parentChoice)
                                     cpp << "// mandatory elements of this choice must be there";
                                 for (const auto& ce : ces) {
-                                    ce.apply_visitor(*this);
+                                    std::visit(*this, ce);
                                     if (&ce != &ces.back())
                                         cpp << "&&";
                                 }
@@ -1294,11 +1334,6 @@ namespace tigl {
                                         childCollector(ces);
                                         auto& childIndices = childCollector.indices;
 
-                                        auto unique = [](std::vector<std::size_t>& v) {
-                                            std::sort(std::begin(v), std::end(v));
-                                            const auto it = std::unique(std::begin(v), std::end(v));
-                                            v.erase(it, std::end(v));
-                                        };
                                         unique(allIndices);
                                         unique(childIndices);
 
@@ -1599,11 +1634,11 @@ namespace tigl {
                         switch (f.cardinality()) {
                             case Cardinality::Optional:
                             case Cardinality::Mandatory:
-                                deps.hppIncludes.push_back("<" + *p + ".h>");
+                                deps.hppIncludes.push_back("<" + p->get() + ".h>");
                                 break;
                             case Cardinality::Vector:
                                 deps.hppCustomForwards.push_back(*p);
-                                deps.cppIncludes.push_back("<" + *p + ".h>");
+                                deps.cppIncludes.push_back("<" + p->get() + ".h>");
                                 break;
                         }
                     }
@@ -1616,8 +1651,8 @@ namespace tigl {
                 for (const auto& dep : c.deps.parents) {
                     const auto p = m_tables.m_customTypes.find(dep->name);
                     if (p) {
-                        deps.hppCustomForwards.push_back(*p);
-                        deps.cppIncludes.push_back("\"" + *p + ".h\"");
+                        deps.hppCustomForwards.push_back(p->get());
+                        deps.cppIncludes.push_back("\"" + p->get() + ".h\"");
                     } else {
                         deps.hppForwards.push_back(dep->name);
                         deps.cppIncludes.push_back("\"" + dep->name + ".h\"");
@@ -1638,7 +1673,16 @@ namespace tigl {
                     return s[0] == '<';
                 });
                 // sort these groups individually
-                auto icmp = [](const std::string& a, const std::string& b) { return boost::ilexicographical_compare(a, b); };
+                // ignore the (potential) capitalization
+                auto icmp = [](const std::string& a, const std::string& b) {
+                    return std::lexicographical_compare(
+                        a.begin(), a.end(),
+                        b.begin(), b.end(),
+                        [](unsigned char ac, unsigned char bc) {
+                            return std::tolower(ac) < std::tolower(bc);
+                        }
+                    );
+                };
                 std::sort(std::begin(includes), mid, icmp);
                 std::sort(mid, std::end(includes), icmp);
                 const auto& newMid = includes.erase(std::unique(std::begin(includes), mid), mid);
@@ -1693,7 +1737,7 @@ namespace tigl {
         auto parentPointerThis(const Class& c) const -> std::string {
             const auto cust = m_tables.m_customTypes.find(c.name);
             if (cust)
-                return "reinterpret_cast<" + *cust + "*>(this)";
+                return "reinterpret_cast<" + cust->get() + "*>(this)";
             else
                 return "this";
         }
@@ -1856,11 +1900,11 @@ namespace tigl {
                 {
                     Scope s(hpp);
 
-                    boost::optional<Scope> ops;
+                    std::optional<Scope> ops;
                     if (!m_namespace.empty()) {
                         hpp << "namespace " << m_namespace;
                         hpp << "{";
-                        ops = boost::in_place(std::ref(hpp));
+                        ops.emplace(std::ref(hpp));
                     }
 
                     // forward declarations
@@ -1950,7 +1994,7 @@ namespace tigl {
                     hpp << "};";
 
                     if (!m_namespace.empty()) {
-                        ops = boost::none;
+                        ops = std::nullopt;
                         hpp << "}";
                     }
                 }
@@ -1964,7 +2008,7 @@ namespace tigl {
                 std::vector<std::string> exportedTypes;
                 const auto& customName = m_tables.m_customTypes.find(c.name);
                 if (customName) {
-                    hpp << "// " << c.name << " is customized, use type " << *customName << " directly";
+                    hpp << "// " << c.name << " is customized, use type " << customName->get() << " directly";
                     if (includes.hppForwards.size() > 0)
                         hpp << EmptyLine;
                 } else
@@ -1976,18 +2020,18 @@ namespace tigl {
                 if (!exportedTypes.empty()) {
                     hpp << "// Aliases in tigl namespace";
 
-                    boost::optional<Scope> ops;
+                    std::optional<Scope> ops;
                     if (!m_namespace.empty()) {
                         hpp << "namespace " << m_namespace;
                         hpp << "{";
-                        ops = boost::in_place(std::ref(hpp));
+                        ops.emplace(std::ref(hpp));
                     }
 
                     for (const auto& name : exportedTypes)
                         hpp << "using C" << name << " = " << generatedNs << "::" << name << ";";
 
                     if (!m_namespace.empty()) {
-                        ops = boost::none;
+                        ops = std::nullopt;
                         hpp << "}";
                     }
                 }
@@ -2029,11 +2073,11 @@ namespace tigl {
                 {
                     Scope s(cpp);
 
-                    boost::optional<Scope> ops;
+                    std::optional<Scope> ops;
                     if (!m_namespace.empty()) {
                         cpp << "namespace " << m_namespace;
                         cpp << "{";
-                        ops = boost::in_place(std::ref(cpp));
+                        ops.emplace(std::ref(cpp));
                     }
 
                     // ctor
@@ -2065,7 +2109,7 @@ namespace tigl {
                         writeUidRefObjectFunctionImplementations(cpp, c);
 
                     if (!m_namespace.empty()) {
-                        ops = boost::none;
+                        ops = std::nullopt;
                         cpp << "}";
                     }
                 }
@@ -2126,11 +2170,11 @@ namespace tigl {
                 {
                     Scope s(hpp);
 
-                    boost::optional<Scope> ops;
+                    std::optional<Scope> ops;
                     if (!m_namespace.empty()) {
                         hpp << "namespace " << m_namespace;
                         hpp << "{";
-                        ops = boost::in_place(std::ref(hpp));
+                        ops.emplace(std::ref(hpp));
                     }
 
                     // meta information from schema
@@ -2192,7 +2236,7 @@ namespace tigl {
                     hpp << "}";
 
                     if (!m_namespace.empty()) {
-                        ops = boost::none;
+                        ops = std::nullopt;
                         hpp << "}";
                     }
                 }
@@ -2204,19 +2248,19 @@ namespace tigl {
 
                 const auto& customName = m_tables.m_customTypes.find(e.name);
                 if (customName) {
-                    hpp << "// " << e.name << " is customized, use type " << *customName << " directly";
+                    hpp << "// " << e.name << " is customized, use type " << customName->get() << " directly";
                 } else {
                     hpp << "// Aliases in tigl namespace";
 
-                    boost::optional<Scope> ops;
+                    std::optional<Scope> ops;
                     if (!m_namespace.empty()) {
                         hpp << "namespace " << m_namespace;
                         hpp << "{";
-                        ops = boost::in_place(std::ref(hpp));
+                        ops.emplace(std::ref(hpp));
                     }
                     hpp << "using E" << e.name << " = " << generatedNs << "::" << e.name << ";";
                     if (!m_namespace.empty()) {
-                        ops = boost::none;
+                        ops = std::nullopt;
                         hpp << "}";
                     }
                 }

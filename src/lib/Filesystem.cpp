@@ -5,7 +5,7 @@
 #include <utility>
 
 namespace tigl {
-	auto readFile(const boost::filesystem::path& filename) -> std::string {
+	auto readFile(const std::filesystem::path& filename) -> std::string {
 		std::ifstream existingFile(filename.string());
 		if (!existingFile)
 			return{};
@@ -20,10 +20,10 @@ namespace tigl {
 		return content;
 	}
 
-	File::File(boost::filesystem::path filename)
+	File::File(std::filesystem::path filename)
 		: m_stream(new std::ostringstream), m_filename(std::move(filename)) {}
 
-	auto File::path() const -> const boost::filesystem::path&
+	auto File::path() const -> const std::filesystem::path&
 	{
 		return m_filename;
 	}
@@ -37,7 +37,7 @@ namespace tigl {
 			const auto& newContent = file.m_stream->str();
 
 			// check if a file already exists
-			if (boost::filesystem::exists(file.m_filename)) {
+			if (std::filesystem::exists(file.m_filename)) {
 				// read existing file to string and compare
 				const auto& content = readFile(file.m_filename);
 
@@ -60,19 +60,19 @@ namespace tigl {
 		}
 	}
 
-	auto Filesystem::newFile(boost::filesystem::path filename) -> File& {
+	auto Filesystem::newFile(std::filesystem::path filename) -> File& {
 		m_files.emplace_back(std::move(filename));
 		return m_files.back();
 	}
 
-	void Filesystem::removeIfExists(const boost::filesystem::path& path) {
-		if (boost::filesystem::exists(path)) {
-			boost::filesystem::remove(path);
+	void Filesystem::removeIfExists(const std::filesystem::path& path) {
+		if (std::filesystem::exists(path)) {
+			std::filesystem::remove(path);
 			deleted++;
 		}
 	}
 
-	void Filesystem::mergeFilesInto(boost::filesystem::path filename) {
+	void Filesystem::mergeFilesInto(std::filesystem::path filename) {
 		File f(std::move(filename));
 		sortFiles();
 		for (auto& file : m_files) {

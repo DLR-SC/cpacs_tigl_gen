@@ -16,7 +16,7 @@
 							(2) it provides the corresponding documentation (see picture below). An XML processor (e.g., <ddue:externalLink><ddue:linkText>TiXI</ddue:linkText><ddue:linkUri>https://github.com/DLR-SC/tixi</ddue:linkUri></ddue:externalLink> or
 							XML tools in Eclipse) parses the XSD and XML files and validates whether the data set defined by the user (or tool) conforms to the given structure defined by the schema.</ddue:para>
 							<ddue:mediaLink>
-								<ddue:image xlink:href="basicPrinciple"/>
+								<ddue:image xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="basicPrinciple"/>
 							</ddue:mediaLink>
 							<ddue:para>This documentation explains the <ddue:legacyBold>elements</ddue:legacyBold> defined in <ddue:legacyItalic>CPACS</ddue:legacyItalic> and its corresponding <ddue:legacyBold>data types</ddue:legacyBold>.
 							Data types can either be <ddue:legacyBold>simple types</ddue:legacyBold> (string, double, boolean, etc.) or

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <boost/optional.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <optional>
 
 namespace tigl {
     class Table {
@@ -25,7 +25,7 @@ namespace tigl {
         MappingTable(const std::string& filename);
 
         bool contains(const std::string& key) const;
-        boost::optional<const std::string&> find(const std::string& key) const;
+        std::optional<std::reference_wrapper<const std::string>> find(const std::string& key) const;
         void substituteIfExists(const std::string& key, std::string& value) const;
 
     private:
