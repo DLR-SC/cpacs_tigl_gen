@@ -14,7 +14,6 @@ namespace fs = std::filesystem;
 namespace tigl {
     const auto runtimeFiles = {
         "TixiHelper.h",
-        "UniquePtr.h",
     };
 
     void processDirectory(const std::string& inputDirectory, const std::string& runtimeDirectory, const std::string& outputDirectory, const std::string& typeSystemGraphVisFile, Filesystem& fs, const std::string& ns = "") {

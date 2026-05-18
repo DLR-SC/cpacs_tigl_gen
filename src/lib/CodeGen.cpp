@@ -1433,7 +1433,7 @@ namespace tigl {
                             cpp << "{";
                             {
                                 Scope s(cpp);
-                                cpp << f.fieldName() << ".push_back(make_unique<" << customReplacedType(f) << ">(" << ctorArgumentList(itC->second, c) << "));";
+                                cpp << f.fieldName() << ".push_back(std::make_unique<" << customReplacedType(f) << ">(" << ctorArgumentList(itC->second, c) << "));";
                                 cpp << "return *" << f.fieldName() << ".back();";
                             }
                             cpp << "}";
@@ -1576,7 +1576,7 @@ namespace tigl {
             if (vectorHeader) {
                 deps.hppIncludes.push_back("<vector>");
                 if (makeUnique) {
-                    deps.hppIncludes.push_back("\"UniquePtr.h\"");
+                    deps.hppIncludes.push_back("<memory>");
                 }
             }
             if (optionalHeader) {
