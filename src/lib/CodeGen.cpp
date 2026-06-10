@@ -1114,7 +1114,7 @@ namespace tigl {
                         cpp << "if (" << tixiHelperNamespace << "::TixiCheckAttribute(tixiHandle, xpath, \"" << f.cpacsName << "\")) {";
                     else {
                         const auto empty = f.xmlType == XMLConstruct::SimpleContent || f.xmlType == XMLConstruct::FundamentalTypeBase;
-                        const auto fundamentalOrEnum = m_tables.m_fundamentalTypes.contains(f.typeName) || m_types.enums.count(f.typeName) > 0;
+                        const auto fundamentalOrEnum = (m_tables.m_fundamentalTypes.contains(f.typeName) || m_types.enums.count(f.typeName) > 0) && f.cardinality() != Cardinality::Vector;
                         if (empty)
                             cpp << "if (" << tixiHelperNamespace << "::TixiCheckElementHasTextContent(tixiHandle, xpath)) {";
                         else if (fundamentalOrEnum)
