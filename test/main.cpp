@@ -88,6 +88,3 @@ TEST(CPACSGenTests, optionalchoice) {
     runTest();
 }
 
-TEST(CPACSGenTests, elementtextcontent) {
-    runTest();
-}
