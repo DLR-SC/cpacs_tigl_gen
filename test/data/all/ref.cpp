@@ -132,7 +132,7 @@ namespace generated
     void CPACSRoot::ReadCPACS(const TixiDocumentHandle& tixiHandle, const std::string& xpath)
     {
         // read element a
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/a")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/a")) {
             m_a = tixi::TixiGetElement<int>(tixiHandle, xpath + "/a");
         }
         else {
@@ -140,12 +140,12 @@ namespace generated
         }
 
         // read element b
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/b")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/b")) {
             m_b = tixi::TixiGetElement<int>(tixiHandle, xpath + "/b");
         }
 
         // read element c
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/c")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/c")) {
             m_c = tixi::TixiGetElement<int>(tixiHandle, xpath + "/c");
         }
         else {
@@ -153,7 +153,7 @@ namespace generated
         }
 
         // read element d
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/d")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/d")) {
             m_d = tixi::TixiGetElement<int>(tixiHandle, xpath + "/d");
         }
         else {
@@ -161,12 +161,12 @@ namespace generated
         }
 
         // read element e
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/e")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/e")) {
             m_e = tixi::TixiGetElement<int>(tixiHandle, xpath + "/e");
         }
 
         // read element f
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/f")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/f")) {
             m_f = tixi::TixiGetElement<int>(tixiHandle, xpath + "/f");
         }
         else {
