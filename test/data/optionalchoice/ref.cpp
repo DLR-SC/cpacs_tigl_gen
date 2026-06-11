@@ -114,12 +114,12 @@ namespace generated
     void CPACSRoot::ReadCPACS(const TixiDocumentHandle& tixiHandle, const std::string& xpath)
     {
         // read element a
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/a")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/a")) {
             m_a_choice1 = tixi::TixiGetElement<int>(tixiHandle, xpath + "/a");
         }
 
         // read element b
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/b")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/b")) {
             m_b_choice2 = tixi::TixiGetElement<int>(tixiHandle, xpath + "/b");
         }
 

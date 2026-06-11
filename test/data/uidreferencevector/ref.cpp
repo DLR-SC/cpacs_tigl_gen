@@ -148,7 +148,7 @@ namespace generated
     void CPACSRoot::ReadCPACS(const TixiDocumentHandle& tixiHandle, const std::string& xpath)
     {
         // read element singleUidRef
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/singleUidRef")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/singleUidRef")) {
             m_singleUidRef = tixi::TixiGetElement<std::string>(tixiHandle, xpath + "/singleUidRef");
             if (m_singleUidRef->empty()) {
                 LOG(WARNING) << "Optional element singleUidRef is present but empty at xpath " << xpath;

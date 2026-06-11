@@ -146,7 +146,7 @@ namespace generated
         }
 
         // read element a
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/a")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/a")) {
             m_a = tixi::TixiGetElement<int>(tixiHandle, xpath + "/a");
         }
         else {
@@ -154,7 +154,7 @@ namespace generated
         }
 
         // read element b
-        if (tixi::TixiCheckElement(tixiHandle, xpath + "/b")) {
+        if (tixi::TixiCheckElementHasTextContent(tixiHandle, xpath + "/b")) {
             m_b = tixi::TixiGetElement<int>(tixiHandle, xpath + "/b");
         }
         else {

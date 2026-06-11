@@ -87,3 +87,4 @@ TEST(CPACSGenTests, collapsedifferentenums) {
 TEST(CPACSGenTests, optionalchoice) {
     runTest();
 }
+
